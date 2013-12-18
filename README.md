@@ -1,4 +1,9 @@
-msgfmt
-======
+Mo (Gettext or Msgfmt) Generator
+===============
 
-Msgfmt class for transform PO files to the MO file.
+Library for generating MO (Gettext) files.
+
+This library uses https://code.google.com/p/wordpress-soc-2007/source/browse/trunk/moeffju/php-msgfmt.
+
+Distributed under the Apache License, version 2.0.
+http://www.apache.org/licenses/LICENSE-2.0
