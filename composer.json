@@ -1,0 +1,23 @@
+{
+    "name": "spalax/mo-generator",
+    "description": "Utilities",
+    "authors": [
+        {
+            "name": "Mylotskyi Oleksii",
+            "email": "spalaxinco@gmail.com"
+        }
+    ],
+    "keywords": [
+        "utils"
+    ],
+    "license": "Apache 2.0",
+    "require": {
+        "php": ">=5.3"
+    },
+    "autoload": {
+        "psr-0": {
+            "Msgfmt": "src/"
+        }
+    },
+    "minimum-stability": "dev"
+}
