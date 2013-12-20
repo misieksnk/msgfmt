@@ -17,7 +17,7 @@ class Generate
             throw new Exception\InvalidArgumentException("Not valid po file");
         }
 
-        if (!is_dir($pathInfo['dirname']) || is_writable($pathInfo['dirname'])) {
+        if (!is_dir($pathInfo['dirname']) || !is_writable($pathInfo['dirname'])) {
             throw new Exception\InvalidArgumentException("Language directory is not writable");
         }
 
@@ -63,7 +63,12 @@ class Generate
             if ($line === '')
                 continue;
 
-            list ($key, $data) = preg_split('/\s/', $line, 2);
+            $result = preg_split('/\s/', $line, 2);
+            if (count($result) < 2) {
+                $key = $result[0];
+            } else {
+                list ($key, $data) = $result;
+            }
 
             switch ($key) {
                 case '#,' : // flag...
