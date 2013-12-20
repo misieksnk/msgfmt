@@ -1,23 +1,12 @@
 <?php
-namespace Msgfmt;
+namespace MsgFmt;
 
 class Generate
 {
     /**
-     * @var string
+     * @return bool
      */
-    protected $moFile;
-
-    /**
-     * @var string
-     */
-    protected $poFile;
-
-    /**
-     * @param string $poFile
-     * @param string $moFile
-     */
-    public function __construct($poFile, $moFile = '')
+    public function convert($poFile, $moFile = '')
     {
         if (!file_exists($poFile)) {
             throw new Exception\InvalidArgumentException("Po file does not exists");
@@ -32,34 +21,28 @@ class Generate
             throw new Exception\InvalidArgumentException("Language directory is not writable");
         }
 
-        $this->poFile = $poFile;
-
         if (empty($moFile)) {
-            $this->moFile = str_replace( '.po', '.mo', $this->poFile);
+            $moFile = str_replace( '.po', '.mo', $poFile);
         }
-    }
 
-    /**
-     * @return bool
-     */
-    public function convert()
-    {
-        $hash = $this->parsePoFile();
+        $hash = $this->parsePoFile($poFile);
         if ( $hash === false ) {
             return false;
         } else {
-            $this->writeMoFile($hash);
+            $this->writeMoFile($hash, $moFile);
             return true;
         }
     }
 
     /**
-     * @return array | bool
+     * @param string $poFile
+     *
+     * @return array|bool
      */
-    protected function parsePoFile()
+    protected function parsePoFile($poFile)
     {
         // read .po file
-        $fh = fopen($this->poFile, 'r');
+        $fh = fopen($poFile, 'r');
 
         if ($fh === false) {
             // Could not open file resource
@@ -182,8 +165,9 @@ class Generate
 
     /**
      * @param array $hash
+     * @param string $moFile
      */
-    protected function writeMoFile(array $hash)
+    protected function writeMoFile(array $hash, $moFile)
     {
         // sort by msgid
         ksort($hash, SORT_STRING);
@@ -244,6 +228,6 @@ class Generate
         // strings
         $mo .= $strings;
 
-        file_put_contents($this->moFile, $mo);
+        file_put_contents($moFile, $mo);
     }
 }
