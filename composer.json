@@ -1,23 +1,20 @@
 {
-    "name": "spalax/msgfmt",
-    "description": "Utilities",
-    "authors": [
-        {
-            "name": "Mylotskyi Oleksii",
-            "email": "spalaxinco@gmail.com"
-        }
-    ],
-    "keywords": [
-        "utils"
-    ],
-    "license": "Apache 2.0",
-    "require": {
-        "php": ">=5.3"
-    },
-    "autoload": {
-        "psr-0": {
-            "MsgFmt": "src/"
-        }
-    },
-    "minimum-stability": "dev"
+  "name": "misieksnk/msgfmt",
+  "description": "Generates MO file from PO file",
+  "authors": [
+    {
+      "name": "misieksnk",
+      "email": "michal@brygidyn.pl"
+    }
+  ],
+  "keywords": [
+    "mo, po"
+  ],
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-0": {
+      "MisiekSnk\\MsgFmt": "src/"
+    }
+  }
 }

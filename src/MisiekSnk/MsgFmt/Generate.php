@@ -1,9 +1,16 @@
 <?php
-namespace MsgFmt;
+namespace MisiekSnk\MsgFmt;
 
+/**
+ * Class Generate
+ *
+ * @package MisiekSnk\MsgFmt
+ */
 class Generate
 {
     /**
+     * @param string $poFile
+     * @param string $moFile
      * @return bool
      */
     public function convert($poFile, $moFile = '')
@@ -22,11 +29,11 @@ class Generate
         }
 
         if (empty($moFile)) {
-            $moFile = str_replace( '.po', '.mo', $poFile);
+            $moFile = str_replace('.po', '.mo', $poFile);
         }
 
         $hash = $this->parsePoFile($poFile);
-        if ( $hash === false ) {
+        if ($hash === false) {
             return false;
         } else {
             $this->writeMoFile($hash, $moFile);
@@ -42,40 +49,36 @@ class Generate
     protected function parsePoFile($poFile)
     {
         // read .po file
-        $fc= file_get_contents($poFile);
+        $fc = file_get_contents($poFile);
         // normalize newlines
-        $fc= str_replace(array (
-            "\r\n",
-            "\r"
-        ), array (
-            "\n",
-            "\n"
-        ), $fc);
+        $fc = str_replace(["\r\n", "\r"], ["\n", "\n"], $fc);
 
         // results array
-        $hash= array ();
+        $hash = [];
         // temporary array
-        $temp= array ();
+        $temp = [];
         // state
-        $state= null;
-        $fuzzy= false;
+        $state = null;
+        $fuzzy = false;
 
         // iterate over lines
         foreach (explode("\n", $fc) as $line) {
-            $line= trim($line);
-            if ($line === '')
+            $line = trim($line);
+            if ($line === '') {
                 continue;
+            }
 
             $result = explode(' ', $line, 2);
             if (count($result) < 2) {
                 $key = $result[0];
+                $data = null;
             } else {
                 list ($key, $data) = $result;
             }
 
             switch ($key) {
                 case '#,' : // flag...
-                    $fuzzy= in_array('fuzzy', preg_split('/,\s*/', $data));
+                    $fuzzy = in_array('fuzzy', preg_split('/,\s*/', $data));
                 case '#' : // translator-comments
                 case '#.' : // extracted-comments
                 case '#:' : // reference...
@@ -83,10 +86,10 @@ class Generate
                     // start a new entry
                     if (sizeof($temp) && array_key_exists('msgid', $temp) && array_key_exists('msgstr', $temp)) {
                         if (!$fuzzy)
-                            $hash[]= $temp;
-                        $temp= array ();
-                        $state= null;
-                        $fuzzy= false;
+                            $hash[] = $temp;
+                        $temp = [];
+                        $state = null;
+                        $fuzzy = false;
                     }
                     break;
                 case 'msgctxt' :
@@ -95,19 +98,19 @@ class Generate
                     // untranslated-string
                 case 'msgid_plural' :
                     // untranslated-string-plural
-                    $state= $key;
-                    $temp[$state]= $data;
+                    $state = $key;
+                    $temp[$state] = $data;
                     break;
                 case 'msgstr' :
                     // translated-string
-                    $state= 'msgstr';
-                    $temp[$state][]= $data;
+                    $state = 'msgstr';
+                    $temp[$state][] = $data;
                     break;
                 default :
-                    if (strpos($key, 'msgstr[') !== FALSE) {
+                    if (strpos($key, 'msgstr[') !== false) {
                         // translated-string-case-n
-                        $state= 'msgstr';
-                        $temp[$state][]= $data;
+                        $state = 'msgstr';
+                        $temp[$state][] = $data;
                     } else {
                         // continued lines
                         switch ($state) {
@@ -121,7 +124,7 @@ class Generate
                                 break;
                             default :
                                 // parse error
-                                return FALSE;
+                                return false;
                         }
                     }
                     break;
@@ -130,20 +133,20 @@ class Generate
 
         // add final entry
         if ($state == 'msgstr')
-            $hash[]= $temp;
+            $hash[] = $temp;
 
         // Cleanup data, merge multiline entries, reindex hash for ksort
-        $temp= $hash;
-        $hash= array ();
+        $temp = $hash;
+        $hash = [];
         foreach ($temp as $entry) {
             foreach ($entry as & $v) {
-                $v= $this->cleanHelper($v);
-                if ($v === FALSE) {
+                $v = $this->cleanHelper($v);
+                if ($v === false) {
                     // parse error
-                    return FALSE;
+                    return false;
                 }
             }
-            $hash[$entry['msgid']]= $entry;
+            $hash[$entry['msgid']] = $entry;
         }
 
         return $hash;
@@ -151,20 +154,23 @@ class Generate
 
     /**
      * @param mixed $x
+     * 
      * @return array|mixed
      */
     protected function cleanHelper($x)
     {
         if (is_array($x)) {
             foreach ($x as $k => $v) {
-                $x[$k]= $this->cleanHelper($v);
+                $x[$k] = $this->cleanHelper($v);
             }
         } else {
-            if ($x[0] == '"')
-                $x= substr($x, 1, -1);
-            $x= str_replace("\"\n\"", '', $x);
-            $x= str_replace('$', '\\$', $x);
-            $x= @ eval ("return \"$x\";");
+            if ($x[0] == '"') {
+                $x = substr($x, 1, -1);
+            }
+
+            $x = str_replace("\"\n\"", '', $x);
+            $x = str_replace('$', '\\$', $x);
+            $x = @eval("return \"$x\";");
         }
         return $x;
     }
@@ -178,46 +184,48 @@ class Generate
         // sort by msgid
         ksort($hash, SORT_STRING);
         // our mo file data
-        $mo= '';
+        $mo = '';
         // header data
-        $offsets= array ();
-        $ids= '';
-        $strings= '';
+        $offsets = array();
+        $ids = '';
+        $strings = '';
 
         foreach ($hash as $entry) {
-            $id= $entry['msgid'];
-            if (isset ($entry['msgid_plural']))
+            $id = $entry['msgid'];
+            if (isset ($entry['msgid_plural'])) {
                 $id .= "\x00" . $entry['msgid_plural'];
+            }
+
             // context is merged into id, separated by EOT (\x04)
-            if (array_key_exists('msgctxt', $entry))
-                $id= $entry['msgctxt'] . "\x04" . $id;
+            if (array_key_exists('msgctxt', $entry)) {
+                $id = $entry['msgctxt'] . "\x04" . $id;
+            }
+
             // plural msgstrs are NUL-separated
-            $str= implode("\x00", $entry['msgstr']);
+            $str = implode("\x00", $entry['msgstr']);
             // keep track of offsets
-            $offsets[]= array (
-                strlen($ids
-                ), strlen($id), strlen($strings), strlen($str));
+            $offsets[] = [strlen($ids), strlen($id), strlen($strings), strlen($str)];
             // plural msgids are not stored (?)
             $ids .= $id . "\x00";
             $strings .= $str . "\x00";
         }
 
         // keys start after the header (7 words) + index tables ($#hash * 4 words)
-        $key_start= 7 * 4 + sizeof($hash) * 4 * 4;
+        $key_start = 7 * 4 + sizeof($hash) * 4 * 4;
         // values start right after the keys
-        $value_start= $key_start +strlen($ids);
+        $value_start = $key_start + strlen($ids);
         // first all key offsets, then all value offsets
-        $key_offsets= array ();
-        $value_offsets= array ();
+        $key_offsets = array();
+        $value_offsets = array();
         // calculate
         foreach ($offsets as $v) {
-            list ($o1, $l1, $o2, $l2)= $v;
-            $key_offsets[]= $l1;
-            $key_offsets[]= $o1 + $key_start;
-            $value_offsets[]= $l2;
-            $value_offsets[]= $o2 + $value_start;
+            list ($o1, $l1, $o2, $l2) = $v;
+            $key_offsets[] = $l1;
+            $key_offsets[] = $o1 + $key_start;
+            $value_offsets[] = $l2;
+            $value_offsets[] = $o2 + $value_start;
         }
-        $offsets= array_merge($key_offsets, $value_offsets);
+        $offsets = array_merge($key_offsets, $value_offsets);
 
         // write header
         $mo .= pack('Iiiiiii', 0x950412de, // magic number
@@ -229,8 +237,10 @@ class Generate
             $key_start // hashtable offset
         );
         // offsets
-        foreach ($offsets as $offset)
+        foreach ($offsets as $offset) {
             $mo .= pack('i', $offset);
+        }
+
         // ids
         $mo .= $ids;
         // strings
